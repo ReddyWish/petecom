@@ -3,7 +3,6 @@
 import { AuthCard } from '@/components/auth/auth-card';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LoginSchema } from '@/app/types/login-schema';
 import * as z from 'zod';
 import {
   FormControl,
@@ -16,17 +15,19 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { emailSignIn } from '@/server/actions/email-signin';
-import { useAction } from 'next-safe-action/hooks';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { RegisterSchema } from '@/app/types/register-schema';
+import { useAction } from 'next-safe-action/hooks';
+import { emailRegister } from '@/server/actions/email-register';
 import { FormSuccess } from '@/components/auth/form-success';
 import { FormError } from '@/components/auth/form-error';
 
-export const LoginForm = () => {
-  const form = useForm({
-    resolver: zodResolver(LoginSchema),
+export const RegisterForm = () => {
+  const form = useForm<z.infer<typeof RegisterSchema>>({
+    resolver: zodResolver(RegisterSchema),
     defaultValues: {
+      name: '',
       email: '',
       password: '',
     },
@@ -34,29 +35,43 @@ export const LoginForm = () => {
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
-  const { execute, status, result } = useAction(emailSignIn, {
+  const { status, execute } = useAction(emailRegister, {
     onSuccess(data) {
-      if (data?.error) setError(data.error);
-      if (data?.success) setSuccess(data.success);
+      if (data.error) setError(data.error);
+      if (data.success) setSuccess(data.success);
     },
   });
 
-  const onSubmit = (values: z.infer<typeof LoginSchema>) => {
+  const onSubmit = (values: z.infer<typeof RegisterSchema>) => {
     execute(values);
   };
 
   return (
     <AuthCard
-      cardTitle="Welcome back!"
-      backButtonHref="/auth/register"
-      backButtonLabel="Create a new account"
+      cardTitle="Create an account! 🐶"
+      backButtonHref="/auth/login"
+      backButtonLabel="Already have an account?"
       showSocials={true}
     >
       <div>
         <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div>
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Good boy" type="text" />
+                    </FormControl>
+                    <FormDescription />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="email"
@@ -112,7 +127,7 @@ export const LoginForm = () => {
               )}
               size={'sm'}
             >
-              {'Login'}
+              {'Register'}
             </Button>
           </form>
         </FormProvider>

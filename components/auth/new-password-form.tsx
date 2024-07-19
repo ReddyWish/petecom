@@ -3,7 +3,6 @@
 import { AuthCard } from '@/components/auth/auth-card';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LoginSchema } from '@/app/types/login-schema';
 import * as z from 'zod';
 import {
   FormControl,
@@ -16,67 +15,51 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { emailSignIn } from '@/server/actions/email-signin';
 import { useAction } from 'next-safe-action/hooks';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { FormSuccess } from '@/components/auth/form-success';
 import { FormError } from '@/components/auth/form-error';
+import { NewPasswordSchema } from '@/app/types/newPassword-schema';
+import { newPassword } from '@/server/actions/new-password';
+import { useParams, useSearchParams } from 'next/navigation';
 
-export const LoginForm = () => {
+export const NewPasswordForm = () => {
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token');
   const form = useForm({
-    resolver: zodResolver(LoginSchema),
+    resolver: zodResolver(NewPasswordSchema),
     defaultValues: {
-      email: '',
       password: '',
+      token,
     },
   });
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const { execute, status, result } = useAction(emailSignIn, {
+  const { execute, status, result } = useAction(newPassword, {
     onSuccess(data) {
       if (data?.error) setError(data.error);
       if (data?.success) setSuccess(data.success);
     },
   });
 
-  const onSubmit = (values: z.infer<typeof LoginSchema>) => {
-    execute(values);
+  const onSubmit = (values: z.infer<typeof NewPasswordSchema>) => {
+    execute({ password: values.password, token });
   };
 
   return (
     <AuthCard
-      cardTitle="Welcome back!"
-      backButtonHref="/auth/register"
-      backButtonLabel="Create a new account"
+      cardTitle="Enter a new password!"
+      backButtonHref="/auth/login"
+      backButtonLabel="Back to login"
       showSocials={true}
     >
       <div>
         <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div>
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="wagging@tail.com"
-                        type="email"
-                        autoComplete="email"
-                      />
-                    </FormControl>
-                    <FormDescription />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <FormField
                 control={form.control}
                 name="password"
@@ -101,7 +84,7 @@ export const LoginForm = () => {
               <FormError message={error} />
 
               <Button size={'sm'} variant={'link'} asChild>
-                <Link href="/auth/reset">Forgot your password?</Link>
+                <Link href="/auth/reset">Back to Login</Link>
               </Button>
             </div>
             <Button
@@ -112,7 +95,7 @@ export const LoginForm = () => {
               )}
               size={'sm'}
             >
-              {'Login'}
+              {'Reset password'}
             </Button>
           </form>
         </FormProvider>

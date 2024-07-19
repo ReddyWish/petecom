@@ -3,7 +3,6 @@
 import { AuthCard } from '@/components/auth/auth-card';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LoginSchema } from '@/app/types/login-schema';
 import * as z from 'zod';
 import {
   FormControl,
@@ -16,41 +15,41 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { emailSignIn } from '@/server/actions/email-signin';
 import { useAction } from 'next-safe-action/hooks';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { FormSuccess } from '@/components/auth/form-success';
 import { FormError } from '@/components/auth/form-error';
+import { ResetPasswordSchema } from '@/app/types/resetPassword-schema';
+import { resetPassword } from '@/server/actions/reset-password';
 
-export const LoginForm = () => {
+export const ResetPasswordForm = () => {
   const form = useForm({
-    resolver: zodResolver(LoginSchema),
+    resolver: zodResolver(ResetPasswordSchema),
     defaultValues: {
       email: '',
-      password: '',
     },
   });
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const { execute, status, result } = useAction(emailSignIn, {
+  const { execute, status, result } = useAction(resetPassword, {
     onSuccess(data) {
       if (data?.error) setError(data.error);
       if (data?.success) setSuccess(data.success);
     },
   });
 
-  const onSubmit = (values: z.infer<typeof LoginSchema>) => {
+  const onSubmit = (values: z.infer<typeof ResetPasswordSchema>) => {
     execute(values);
   };
 
   return (
     <AuthCard
-      cardTitle="Welcome back!"
-      backButtonHref="/auth/register"
-      backButtonLabel="Create a new account"
+      cardTitle="Forgot the password?"
+      backButtonHref="/auth/login"
+      backButtonLabel="Back to login"
       showSocials={true}
     >
       <div>
@@ -62,33 +61,14 @@ export const LoginForm = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Enter your email</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         placeholder="wagging@tail.com"
                         type="email"
                         autoComplete="email"
-                      />
-                    </FormControl>
-                    <FormDescription />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="******"
-                        type="password"
-                        autoComplete="currect-password"
+                        disabled={status === 'executing'}
                       />
                     </FormControl>
                     <FormDescription />
@@ -101,7 +81,7 @@ export const LoginForm = () => {
               <FormError message={error} />
 
               <Button size={'sm'} variant={'link'} asChild>
-                <Link href="/auth/reset">Forgot your password?</Link>
+                <Link href="/auth/reset">Back to Login</Link>
               </Button>
             </div>
             <Button
@@ -112,7 +92,7 @@ export const LoginForm = () => {
               )}
               size={'sm'}
             >
-              {'Login'}
+              {'Reset password'}
             </Button>
           </form>
         </FormProvider>
